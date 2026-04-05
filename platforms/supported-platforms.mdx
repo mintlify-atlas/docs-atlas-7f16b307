@@ -1,0 +1,82 @@
+---
+title: "Supported platforms"
+description: "GitHub-hosted runner images supported by setup-ruby"
+---
+
+`setup-ruby` works on a specific set of GitHub-hosted runner images. Runner images not listed here are not supported.
+
+## GitHub-hosted runners
+
+| Operating system | Supported images |
+| ---------------- | ---------------- |
+| Ubuntu           | `ubuntu-22.04`, `ubuntu-24.04`, `ubuntu-22.04-arm`, `ubuntu-24.04-arm` |
+| macOS            | `macos-14` and newer |
+| Windows          | `windows-2022`, `windows-2025`, `windows-11-arm` |
+
+`$OS-latest` aliases (such as `ubuntu-latest`, `macos-latest`, `windows-latest`) resolve to one of the images above.
+
+<Note>
+Not all Ruby version and platform combinations are supported. The availability of a version on one platform does not guarantee its availability on another.
+</Note>
+
+## Finding available versions
+
+The complete list of available Ruby versions per platform lives in two JSON files in the repository:
+
+- **Ubuntu and macOS** — [`ruby-builder-versions.json`](https://github.com/ruby/setup-ruby/blob/master/ruby-builder-versions.json) lists versions by platform. The full set of published builds is also available on the [ruby-builder releases page](https://github.com/ruby/ruby-builder/releases/tag/toolcache).
+- **Windows** — [`windows-versions.json`](https://github.com/ruby/setup-ruby/blob/master/windows-versions.json) lists the RubyInstaller-published releases available per architecture.
+
+## Prebuilt release sources
+
+Prebuilt Ruby binaries are generated and published by several projects depending on the platform and Ruby variant:
+
+<CardGroup cols={2}>
+  <Card
+    title="ruby-builder"
+    icon="hammer"
+    href="https://github.com/ruby/ruby-builder"
+  >
+    Produces prebuilt MRI, JRuby, and TruffleRuby releases for Ubuntu and macOS.
+  </Card>
+  <Card
+    title="RubyInstaller2"
+    icon="windows"
+    href="https://github.com/oneclick/rubyinstaller2"
+  >
+    Produces prebuilt MRI releases for Windows (mingw and ucrt variants).
+  </Card>
+  <Card
+    title="ruby-loco"
+    icon="wrench"
+    href="https://github.com/MSP-Greg/ruby-loco"
+  >
+    Produces the `mingw`, `ucrt`, and `mswin` master builds for Windows.
+  </Card>
+  <Card
+    title="Dev builders"
+    icon="code"
+    href="https://github.com/ruby/ruby-dev-builder"
+  >
+    `ruby-head` (ruby-dev-builder), `jruby-head` (jruby-dev-builder), and `truffleruby-head` (truffleruby-dev-builder) are built daily.
+  </Card>
+</CardGroup>
+
+## Platform-specific notes
+
+### Ubuntu and macOS
+
+Preview and RC versions of Ruby may be available on Ubuntu and macOS. Testing against `ruby-head` is generally preferred over preview versions, as it provides more useful feedback for the Ruby core team.
+
+The `ruby-asan` and `asan-release` variants (Ruby built with AddressSanitizer) are currently only available on `ubuntu-24.04`.
+
+### Windows
+
+Only release versions published by [RubyInstaller](https://rubyinstaller.org/downloads/archives/) are available on Windows. This means version resolution can differ from other platforms — for example, Ruby 2.2 resolves to 2.2.6 on Windows but 2.2.10 on Ubuntu and macOS, and Ruby 2.3 on Windows only has builds for 2.3.0, 2.3.1, and 2.3.3.
+
+See [Windows](/platforms/windows) for more details on Windows-specific behavior.
+
+### Self-hosted runners
+
+If you are using a self-hosted runner, the action detects whether the platform matches a supported GitHub-hosted image. If it does not match, it automatically falls back to self-hosted mode.
+
+See [Self-hosted runners](/platforms/self-hosted-runners) for requirements and configuration.

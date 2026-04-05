@@ -1,0 +1,91 @@
+---
+title: "Self-hosted runners"
+description: "Using setup-ruby with self-hosted GitHub Actions runners"
+---
+
+`setup-ruby` can work with [self-hosted runners](https://docs.github.com/en/actions/hosting-your-own-runners/about-self-hosted-runners), but only under specific conditions. Because prebuilt Ruby binaries embed the install path at build time and cannot be relocated, the runner environment must closely match the GitHub-hosted runner images used to produce those binaries.
+
+## Requirements
+
+For prebuilt Rubies to work on a self-hosted runner, all of the following must be true:
+
+<Steps>
+  <Step title="Use the same OS and version">
+    The runner must use the same operating system and version as one of the supported GitHub-hosted runner images. For example, `ubuntu-24.04` or `macos-14`. A different Ubuntu version will not work with binaries built for `ubuntu-24.04`.
+  </Step>
+  <Step title="Match the libssl version">
+    The runner must have the same version of `libssl` as the corresponding GitHub-hosted image. Ruby binaries link against a specific `libssl` version; a mismatch causes a load error at startup.
+  </Step>
+  <Step title="Install libyaml-0 and libgmp">
+    The runner operating system must have `libyaml-0` and `libgmp` installed. These are runtime dependencies of prebuilt Ruby binaries and are not bundled with the Ruby archive.
+  </Step>
+  <Step title="Make the tool cache directory writable">
+    The default tool cache directory must be writable by the `runner` user. The prebuilt Ruby archives are extracted into this directory.
+
+    | Platform | Default tool cache path |
+    | -------- | ----------------------- |
+    | Linux    | `/opt/hostedtoolcache` |
+    | macOS    | `/Users/runner/hostedtoolcache` |
+    | Windows  | `C:/hostedtoolcache/windows` |
+  </Step>
+  <Step title="Make /home/runner writable">
+    `/home/runner` must be writable by the `runner` user. The action writes files here during setup.
+  </Step>
+</Steps>
+
+<Warning>
+Prebuilt Ruby binaries embed the install path and cannot be moved. If the tool cache path on your self-hosted runner differs from the paths listed above, the binaries will not work.
+</Warning>
+
+## Why these requirements exist
+
+The prebuilt Ruby releases downloaded by this action are compiled with a hardcoded installation prefix — the tool cache path. This is different from a system Ruby, which is compiled for a known system-wide prefix like `/usr/local`. Because the path is baked in, placing the binary at a different path causes Ruby to fail to find its standard library and native extensions.
+
+## Automatic detection
+
+The action detects at runtime whether it is running on a supported GitHub-hosted platform. It checks the OS name, OS version, and architecture against the known list of supported GitHub-hosted images:
+
+- `ubuntu-22.04-x64`, `ubuntu-22.04-arm64`
+- `ubuntu-24.04-x64`, `ubuntu-24.04-arm64`
+- `windows-2022-x64`, `windows-2025-x64`, `windows-11-arm64`
+- macOS 13 or later on either x64 or arm64
+
+If the platform does not match any of these, the action automatically treats the runner as self-hosted and falls back to self-hosted mode. You do not need to set the `self-hosted` input explicitly for this fallback to occur.
+
+## The `self-hosted` input
+
+Set `self-hosted: true` to explicitly opt into self-hosted mode. This causes the action to look for Ruby in the runner's own tool cache (`$RUNNER_TOOL_CACHE`) rather than in the fixed prebuilt path.
+
+```yaml
+- uses: ruby/setup-ruby@v1
+  with:
+    ruby-version: '3.4'
+    self-hosted: true
+```
+
+This is useful when you have compiled and installed a custom Ruby into your self-hosted runner's tool cache and want the action to find and use it, without downloading a prebuilt binary.
+
+<Note>
+When the action detects self-hosted mode (either automatically or via `self-hosted: true`), it prints a message showing where Ruby should be installed. If Ruby is not found there, it will tell you the exact path to use.
+</Note>
+
+## Alternatives
+
+If your self-hosted runner does not meet the requirements above, consider these alternatives:
+
+<CardGroup cols={2}>
+  <Card
+    title="System package Ruby"
+    icon="box"
+    href="https://www.ruby-lang.org/en/documentation/installation/"
+  >
+    Install Ruby from your OS package manager (e.g., `apt`, `brew`, `dnf`). Skip `setup-ruby` entirely and use the system Ruby directly.
+  </Card>
+  <Card
+    title="Docker image"
+    icon="docker"
+    href="https://hub.docker.com/_/ruby"
+  >
+    Run your CI job inside a Docker container that has Ruby pre-installed. The official `ruby` Docker images cover many versions and platforms.
+  </Card>
+</CardGroup>

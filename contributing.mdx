@@ -1,0 +1,87 @@
+---
+title: 'Contributing'
+description: 'How to contribute to setup-ruby'
+---
+
+## Setting up the development environment
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/ruby/setup-ruby.git
+    cd setup-ruby
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    ```bash
+    yarn install
+    ```
+
+    <Note>
+      Use `yarn`, not `npm`. Installing with `npm` does not install the correct dependencies for `eslint`.
+    </Note>
+  </Step>
+
+  <Step title="Build the dist bundle">
+    ```bash
+    yarn run package
+    ```
+
+    This regenerates `dist/index.js` using [`@vercel/ncc`](https://github.com/vercel/ncc), which bundles `index.js` and all dependencies into a single file.
+  </Step>
+
+  <Step title="Set up the pre-commit hook">
+    ```bash
+    cp pre-commit .git/hooks/pre-commit
+    ```
+
+    <Tip>
+      The pre-commit hook automatically rebuilds `dist/index.js` before each commit, ensuring the bundle stays in sync with your changes.
+    </Tip>
+  </Step>
+</Steps>
+
+## Adding new Ruby versions
+
+New Ruby versions are added automatically. Since [this was automated](https://github.com/ruby/setup-ruby/issues/254), no manual steps are required.
+
+New releases appear within 24 hours of being published. The `ruby-builder-bot` creates PRs automatically via the [check-new-releases workflow](https://github.com/ruby/ruby-builder/actions/workflows/check-new-releases.yml), which runs every hour.
+
+<Info>
+  If a new Ruby version does not appear within 24 hours of its release, file an issue on the [setup-ruby issue tracker](https://github.com/ruby/setup-ruby/issues).
+</Info>
+
+## Release process
+
+Releases are published by running the [release workflow](https://github.com/ruby/setup-ruby/actions/workflows/release.yml) on GitHub Actions. The `ruby-builder-bot` opens PRs automatically whenever new Ruby versions are detected.
+
+The current release team is: **@eregon**, **@MSP-Greg**, **@ntkme**, **@flavorjones**, **@larskanis**, **@headius**.
+
+All release team members have write access to the repository to merge and release `ruby-builder-bot` PRs.
+
+<Warning>
+  Release team members must not merge PRs other than those from `ruby-builder-bot`, unless they are also setup-ruby maintainers.
+</Warning>
+
+For Windows specifically, @larskanis can trigger the [check-new-windows-versions workflow](https://github.com/ruby/setup-ruby/actions/workflows/check-new-windows-versions.yml) manually to speed up detection of new RubyInstaller releases. Otherwise it runs twice a day.
+
+## Maintainer roles
+
+| Maintainer | Role |
+| ---------- | ---- |
+| @eregon | Lead maintainer and creator. All design changes (new inputs, different behavior) require his approval. |
+| @MSP-Greg | Maintainer. Can merge bug fixes. |
+| @ntkme | Maintainer. Can merge bug fixes. |
+
+<Note>
+  Maintainers should request a review on their PRs from another maintainer, but do not need to wait for the review if a fix is urgent (for example, if `setup-ruby` is broken in a clear and obvious way).
+</Note>
+
+Maintainers can also [release setup-ruby](https://github.com/ruby/setup-ruby/actions/workflows/release.yml) directly so that changes from their PRs get published.
+
+## Credits
+
+- **Creator:** @eregon (Benoit Daloze)
+- **Windows logic:** based on work by @MSP-Greg
+- **Thanks to:** @MSP-Greg and Lars Kanis for their help with Ruby Installer

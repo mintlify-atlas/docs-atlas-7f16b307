@@ -1,0 +1,62 @@
+---
+title: 'Action versioning'
+description: 'How setup-ruby is versioned and which version to use'
+---
+
+## Use `ruby/setup-ruby@v1` (recommended)
+
+Always reference the action as `ruby/setup-ruby@v1` in your workflows:
+
+```yaml
+- uses: ruby/setup-ruby@v1
+  with:
+    ruby-version: '3.4'
+```
+
+`v1` is a moving branch that always points to the latest release. Using it means your workflows automatically receive:
+
+- Bug fixes
+- Support for newly released Ruby versions (MRI, JRuby, TruffleRuby)
+- New features and improvements
+
+This is the approach [recommended by GitHub Actions](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md) for action versioning.
+
+## Pinning to a specific version
+
+You can pin to a specific release tag or commit SHA:
+
+```yaml
+# Specific release tag
+- uses: ruby/setup-ruby@v1.2.3
+
+# Specific commit SHA
+- uses: ruby/setup-ruby@a18a0fb0b03beded7b78ccf59a913c8c00
+```
+
+<Warning>
+  Pinning to a release tag or commit SHA means you will **not** receive automatic updates. Only the Ruby versions available at the time of that commit will be accessible. You must manually update the reference to use newer Ruby versions or get bug fixes.
+</Warning>
+
+When pinning, you are responsible for keeping the reference up to date as new Ruby versions are released and as bugs are fixed.
+
+## Semantic versioning
+
+`setup-ruby` follows [semantic versioning](https://semver.org/) with a moving `v1` branch. The `v1` branch is always updated to point to the latest `1.x.y` release, so referencing `@v1` gives you the latest stable release in the v1 line without breaking changes.
+
+This follows the [GitHub Actions versioning recommendations](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md).
+
+## Reporting issues
+
+Before reporting a bug, always verify you are running the latest release by using `ruby/setup-ruby@v1`. Issues reported against pinned or outdated versions may already be fixed.
+
+## History
+
+This action was previously published as `eregon/use-ruby-action`. If your workflows still reference that name, update them to `ruby/setup-ruby@v1`.
+
+```yaml
+# Old (no longer maintained)
+- uses: eregon/use-ruby-action@v1
+
+# Current
+- uses: ruby/setup-ruby@v1
+```

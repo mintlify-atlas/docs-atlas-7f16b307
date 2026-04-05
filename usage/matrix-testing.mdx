@@ -1,0 +1,87 @@
+---
+title: "Matrix testing"
+description: "Test across multiple Ruby versions and operating systems"
+---
+
+GitHub Actions matrix builds let you run the same job against multiple Ruby versions and operating systems with minimal duplication.
+
+## Matrix of Ruby versions and operating systems
+
+The example below tests all current stable MRI releases plus `head` versions of MRI, JRuby, and TruffleRuby on both Ubuntu and macOS:
+
+```yaml
+name: CI
+on: [push, pull_request]
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        # Due to https://github.com/actions/runner/issues/849, we have to use quotes for '3.0'
+        ruby: ['2.7', '3.0', '3.1', '3.2', '3.3', '3.4', head, jruby, jruby-head, truffleruby, truffleruby-head]
+    runs-on: ${{ matrix.os }}
+    steps:
+        - uses: actions/checkout@v6
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+      - run: bundle exec rake
+```
+
+<Warning>
+  Version strings like `'3.0'` must be quoted in YAML. Without quotes, the GitHub Actions runner parses them as floating-point numbers, which silently drops the trailing zero and causes the action to receive `3` instead of `3.0`. See [actions/runner#849](https://github.com/actions/runner/issues/849) for details.
+</Warning>
+
+<Tip>
+  Set `fail-fast: false` so that a failure in one matrix entry does not cancel the remaining jobs. This lets you see the full picture of which combinations pass and which fail.
+</Tip>
+
+## Matrix of Gemfiles
+
+Test against multiple Gemfiles to verify compatibility with different dependency versions (for example, different Rails versions):
+
+```yaml
+name: CI
+on: [push, pull_request]
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        gemfile: [rails7, rails8]
+    runs-on: ubuntu-latest
+    env: # $BUNDLE_GEMFILE must be set at the job level, so it is set for all steps
+      BUNDLE_GEMFILE: ${{ github.workspace }}/gemfiles/${{ matrix.gemfile }}.gemfile
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.4'
+          bundler-cache: true
+      - run: bundle exec rake
+```
+
+<Note>
+  `BUNDLE_GEMFILE` must be set at the **job level** in the `env` block, not inside a step. This ensures the variable is available to all steps, including the `ruby/setup-ruby` action itself, which reads it when resolving the Gemfile and lockfile paths.
+</Note>
+
+Place your alternate Gemfiles under a `gemfiles/` directory in your repository, for example:
+
+```text
+gemfiles/
+  rails7.gemfile
+  rails7.gemfile.lock
+  rails8.gemfile
+  rails8.gemfile.lock
+```
+
+Each Gemfile specifies the gem version to test against:
+
+```ruby
+# gemfiles/rails8.gemfile
+source "https://rubygems.org"
+gem "rails", "~> 8.0"
+gemspec
+```

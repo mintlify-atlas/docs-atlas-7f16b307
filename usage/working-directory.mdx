@@ -1,0 +1,60 @@
+---
+title: "Working directory"
+description: "Resolve version files and Gemfile from a subdirectory"
+---
+
+The `working-directory` input tells the action which directory to use when looking for `.ruby-version`, `.tool-versions`, `mise.toml`, and `Gemfile.lock`. This is useful in monorepos where the Ruby project is not at the repository root.
+
+## How it works
+
+When `working-directory` is set, the action changes its internal working directory to the specified path before reading any version or Gemfile-related files. All of the following are resolved relative to this directory:
+
+- `.ruby-version`
+- `.tool-versions`
+- `mise.toml`
+- `Gemfile` (or `gems.rb`)
+- `Gemfile.lock` (or `gems.locked`)
+
+## Example: Ruby app in a subdirectory
+
+```yaml
+name: CI
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ruby/setup-ruby@v1
+        with:
+          working-directory: ./api
+          bundler-cache: true
+      - run: bundle exec rake
+        working-directory: ./api
+```
+
+In this example, the action reads `./api/.ruby-version` (or `.tool-versions` or `mise.toml`) to determine the Ruby version, and reads `./api/Gemfile.lock` to determine the Bundler version and compute the cache key.
+
+<Note>
+  `working-directory` only affects the action itself — it does not change the working directory for subsequent `run` steps. Each `run` step that operates on the subdirectory must set its own `working-directory`.
+</Note>
+
+## Combining with `BUNDLE_GEMFILE`
+
+If your Gemfile has a non-standard name or location, use `BUNDLE_GEMFILE` in addition to `working-directory`:
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      BUNDLE_GEMFILE: ${{ github.workspace }}/api/gemfiles/rails8.gemfile
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ruby/setup-ruby@v1
+        with:
+          working-directory: ./api
+          bundler-cache: true
+```
+
+When `BUNDLE_GEMFILE` is set, the action uses that path for the Gemfile and the corresponding `.lock` file (`$BUNDLE_GEMFILE.lock`), while still using `working-directory` to resolve the Ruby version file.

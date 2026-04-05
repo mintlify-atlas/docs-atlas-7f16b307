@@ -1,0 +1,98 @@
+---
+title: "Bundler version"
+description: "Control which Bundler version is installed"
+---
+
+The `bundler` input controls which version of Bundler the action installs. The default behavior reads the version from `Gemfile.lock` when possible, which is the recommended approach for most projects.
+
+## Default behavior (`Gemfile.lock`)
+
+The default value for `bundler` is `Gemfile.lock`. The action reads the `BUNDLED WITH` section of your lockfile and installs that version of Bundler:
+
+```text
+BUNDLED WITH
+   2.5.6
+```
+
+If there is no lockfile, or the lockfile has no `BUNDLED WITH` section, the action falls back to the same behavior as `bundler: default`.
+
+This is the recommended setting because it ensures the same Bundler version is used both locally and in CI.
+
+## Available settings
+
+### `bundler: default`
+
+Uses the Bundler that ships with Ruby as a default gem, provided it is version 2.2 or newer. If the bundled Bundler is older than 2.2, the action installs the latest compatible version instead.
+
+```yaml
+- uses: ruby/setup-ruby@v1
+  with:
+    ruby-version: '3.4'
+    bundler: default
+```
+
+### `bundler: latest`
+
+Always installs the latest Bundler version compatible with the selected Ruby:
+
+- Ruby 3.2 and newer: Bundler 4
+- Ruby 2.3 – 3.1: Bundler 2
+- Ruby 2.2 and older: Bundler 1
+
+```yaml
+- uses: ruby/setup-ruby@v1
+  with:
+    ruby-version: '3.4'
+    bundler: latest
+```
+
+### `bundler: none`
+
+Skips Bundler installation entirely. Use this when you manage Bundler yourself or when Bundler is not needed:
+
+```yaml
+- uses: ruby/setup-ruby@v1
+  with:
+    ruby-version: '3.4'
+    bundler: none
+```
+
+### Specific version
+
+Pin to a major version, minor version, or exact version:
+
+```yaml
+- uses: ruby/setup-ruby@v1
+  with:
+    ruby-version: '3.4'
+    bundler: '2.5.6'
+```
+
+Accepted formats: `2`, `2.5`, `2.5.6`. For a 1- or 2-part version, the constraint is treated as `~> X.0` or `~> X.Y.0` respectively.
+
+## Version compatibility rules
+
+The action enforces the following compatibility constraints automatically, overriding the requested version when necessary:
+
+| Condition | Bundler used |
+| --- | --- |
+| Bundler 4 requested, Ruby < 3.2 | Bundler 2 |
+| Bundler 2+ requested, Ruby ≤ 2.2 | Bundler 1 |
+| Bundler 2+ requested, Ruby 2.3.0 or 2.3.1 | Bundler 1 |
+| Bundler 2+ requested, JRuby 9.1 | Bundler 1 |
+| Bundler 2 on Ruby 2.3.2 – 2.5 | Bundler 2.3 |
+| Bundler 2 on Ruby 2.6 – 2.7 | Bundler 2.4 |
+
+These constraints exist because older Ruby versions shipped with RubyGems that is not compatible with newer Bundler releases. JRuby 9.1 has a known bug with Bundler 2+.
+
+<Note>
+  Bundler 4 requires Ruby 3.2 or newer. If you specify `bundler: 4` or `bundler: latest` on an older Ruby, Bundler 2 is installed automatically.
+</Note>
+
+## Windows note
+
+On Windows with stable MRI Ruby builds, the action always installs the latest compatible Bundler version rather than using the one shipped with Ruby. This is because the `bin/bundle` wrapper does not work correctly in Bash on Windows when using the default gem.
+
+<Warning>
+  On Windows, use Bundler 2.2.18 or newer. Older versions have known bugs. To ensure this, do not set the `bundler` input and make sure your `Gemfile.lock` does not contain `BUNDLED WITH 1.x.y`.
+</Warning>

@@ -1,0 +1,33 @@
+---
+title: 'Action outputs'
+description: 'Outputs produced by setup-ruby that you can use in subsequent steps'
+---
+
+`setup-ruby` exposes the following outputs after the step completes. To use them, set an `id` on the step and reference the output with `steps.<id>.outputs.<name>`.
+
+## `ruby-prefix`
+
+**Type:** `string`
+
+The installation prefix (root directory) of the Ruby that was installed. This is the path passed to `--prefix` when Ruby was built, and is the parent of the `bin/`, `lib/`, and `include/` directories.
+
+### Usage example
+
+```yaml
+- uses: ruby/setup-ruby@v1
+  id: ruby
+  with:
+    ruby-version: '3.4'
+
+- run: echo "Ruby installed at ${{ steps.ruby.outputs.ruby-prefix }}"
+```
+
+### Example value
+
+```text
+/opt/hostedtoolcache/Ruby/3.4.2/x64
+```
+
+<Note>
+  The exact path depends on the runner platform, architecture, and Ruby version. Do not hardcode this path — always read it from the output.
+</Note>

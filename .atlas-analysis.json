@@ -1,0 +1,78 @@
+{
+  "projectType": "general",
+  "projectName": "setup-ruby",
+  "projectDescription": "A GitHub Action that downloads a prebuilt Ruby (MRI, JRuby, or TruffleRuby) and adds it to the PATH in about 5 seconds.",
+  "theme": "luma",
+  "primaryColor": "#848c8e",
+  "lightColor": "#11161e",
+  "darkColor": "#cfd0d2",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get Started",
+        "pages": [
+          "introduction",
+          "quickstart",
+          "supported-versions"
+        ]
+      },
+      {
+        "group": "Usage",
+        "pages": [
+          "usage/basic-setup",
+          "usage/matrix-testing",
+          "usage/bundler-cache",
+          "usage/rubygems",
+          "usage/bundler",
+          "usage/working-directory"
+        ]
+      },
+      {
+        "group": "Platforms & Runners",
+        "pages": [
+          "platforms/supported-platforms",
+          "platforms/windows",
+          "platforms/self-hosted-runners"
+        ]
+      },
+      {
+        "group": "Reference",
+        "pages": [
+          "reference/inputs",
+          "reference/outputs",
+          "reference/version-syntax",
+          "reference/versioning"
+        ]
+      },
+      {
+        "group": "Contributing",
+        "pages": [
+          "contributing"
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Downloads prebuilt Ruby (MRI, JRuby, TruffleRuby) in ~5 seconds",
+    "Supports automatic Bundler installation and gem caching",
+    "Reads Ruby version from .ruby-version, .tool-versions, or mise.toml",
+    "Works on Ubuntu, macOS, and Windows GitHub-hosted runners",
+    "Supports matrix testing across multiple Ruby versions and OS",
+    "Automatic RubyGems version management",
+    "Self-hosted runner support"
+  ],
+  "publicApiSurface": [
+    "input: ruby-version",
+    "input: rubygems",
+    "input: bundler",
+    "input: bundler-cache",
+    "input: working-directory",
+    "input: cache-version",
+    "input: self-hosted",
+    "input: windows-toolchain",
+    "input: token",
+    "output: ruby-prefix",
+    "export: run()",
+    "export: setupRuby(options)"
+  ]
+}

@@ -1,0 +1,186 @@
+---
+title: 'Version syntax'
+description: 'All supported ways to specify the Ruby version in setup-ruby'
+---
+
+The `ruby-version` input accepts a wide variety of formats. The table below summarises the options, and each section below shows a YAML example.
+
+<Note>
+  Always quote version numbers that look like floats in YAML — for example, `'3.0'` not `3.0`. Without quotes, YAML parses `3.0` as the number `3`, which will resolve to the wrong version. See the [GitHub Actions runner issue](https://github.com/actions/runner/issues/849) for details.
+</Note>
+
+## Engine-version format
+
+Specify both the engine and the exact version separated by a hyphen.
+
+| Example input | What it installs |
+| --- | --- |
+| `ruby-2.6.5` | MRI Ruby 2.6.5 |
+| `truffleruby-19.3.0` | TruffleRuby 19.3.0 |
+| `truffleruby+graalvm-21.2.0` | TruffleRuby+GraalVM 21.2.0 |
+| `jruby-9.4.0.0` | JRuby 9.4.0.0 |
+
+```yaml
+- uses: ruby/setup-ruby@v1
+  with:
+    ruby-version: 'truffleruby-19.3.0'
+```
+
+## Short version (MRI)
+
+Provide a major.minor version without a patch number. The action selects the latest available patch release that matches.
+
+```yaml
+- uses: ruby/setup-ruby@v1
+  with:
+    ruby-version: '3.3'   # resolves to e.g. 3.3.7
+```
+
+## Version only (assumes MRI)
+
+Provide a full version number without an engine name. The action assumes MRI (`ruby`).
+
+```yaml
+- uses: ruby/setup-ruby@v1
+  with:
+    ruby-version: '3.4.1'
+```
+
+## Engine only (latest stable)
+
+Provide just the engine name with no version. The action installs the latest stable release for that engine.
+
+```yaml
+- uses: ruby/setup-ruby@v1
+  with:
+    ruby-version: 'truffleruby'   # latest stable TruffleRuby
+```
+
+```yaml
+- uses: ruby/setup-ruby@v1
+  with:
+    ruby-version: 'jruby'   # latest stable JRuby
+```
+
+```yaml
+- uses: ruby/setup-ruby@v1
+  with:
+    ruby-version: 'ruby'   # latest stable MRI
+```
+
+## File-based version selection
+
+### `.ruby-version`
+
+Pass the literal string `.ruby-version` to read the version from the project's `.ruby-version` file.
+
+```yaml
+- uses: ruby/setup-ruby@v1
+  with:
+    ruby-version: '.ruby-version'
+```
+
+### `.tool-versions` (asdf format)
+
+Pass the literal string `.tool-versions` to read from the project's `.tool-versions` file. The action looks for a line matching `ruby <version>`.
+
+```yaml
+- uses: ruby/setup-ruby@v1
+  with:
+    ruby-version: '.tool-versions'
+```
+
+Example `.tool-versions` file:
+
+```text
+ruby 3.3.7
+nodejs 20.0.0
+```
+
+### `mise.toml`
+
+Pass the literal string `mise.toml` to read from the project's `mise.toml` file. The action looks for a line matching `ruby = "<version>"`.
+
+```yaml
+- uses: ruby/setup-ruby@v1
+  with:
+    ruby-version: 'mise.toml'
+```
+
+Example `mise.toml` file:
+
+```toml
+ruby = "3.3.7"
+```
+
+## Automatic fallback (no input set)
+
+When the `ruby-version` input is not set (or left as `default`), the action checks for version files in this order:
+
+<Steps>
+  <Step title="Check for .ruby-version">
+    If a `.ruby-version` file exists in the working directory, its contents are used.
+  </Step>
+  <Step title="Check for .tool-versions">
+    If a `.tool-versions` file exists, the `ruby` line is used.
+  </Step>
+  <Step title="Check for mise.toml">
+    If a `mise.toml` file exists, the `ruby` key is used.
+  </Step>
+  <Step title="Error">
+    If none of these files exist, the action fails with an error asking you to set the `ruby-version` input.
+  </Step>
+</Steps>
+
+```yaml
+# ruby-version is omitted — reads from .ruby-version, .tool-versions, or mise.toml
+- uses: ruby/setup-ruby@v1
+  with:
+    bundler-cache: true
+```
+
+## Special version names
+
+The following special version names are available for MRI (`ruby`):
+
+| Version name | Description |
+| --- | --- |
+| `head` | Latest development build of MRI from the `master` branch |
+| `debug` | Same as `head` but compiled with assertions enabled (`-DRUBY_DEBUG=1`) |
+| `asan` | Same as `head` but with AddressSanitizer enabled. Native extensions are automatically compiled with ASan. Currently only available on `ubuntu-24.04`. |
+| `asan-release` | Similar to `asan` but built from the latest stable release tag. Currently only available on `ubuntu-24.04`. |
+| `mingw` | Windows master build: MSYS2/MinGW |
+| `ucrt` | Windows master build: MSYS2/UCRT64 |
+| `mswin` | Windows master build: MSVC/VS 2022 |
+
+<Warning>
+  `mingw`, `ucrt`, and `mswin` are Windows-only. `asan` and `asan-release` are only available on `ubuntu-24.04`.
+</Warning>
+
+```yaml
+- uses: ruby/setup-ruby@v1
+  with:
+    ruby-version: 'head'
+```
+
+```yaml
+# Windows-only master builds
+- uses: ruby/setup-ruby@v1
+  with:
+    ruby-version: 'mswin'
+```
+
+## Matrix example
+
+```yaml
+strategy:
+  fail-fast: false
+  matrix:
+    # Due to https://github.com/actions/runner/issues/849, use quotes for '3.0'
+    ruby: ['2.7', '3.0', '3.1', '3.2', '3.3', '3.4', 'head', 'jruby', 'jruby-head', 'truffleruby', 'truffleruby-head']
+steps:
+  - uses: ruby/setup-ruby@v1
+    with:
+      ruby-version: ${{ matrix.ruby }}
+      bundler-cache: true
+```

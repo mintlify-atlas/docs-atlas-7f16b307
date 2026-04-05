@@ -1,0 +1,103 @@
+---
+title: 'Action inputs'
+description: 'Complete reference for all setup-ruby action inputs'
+---
+
+All inputs are configured under the `with:` key of the `ruby/setup-ruby` step.
+
+```yaml
+- uses: ruby/setup-ruby@v1
+  with:
+    ruby-version: '3.4'
+    bundler-cache: true
+```
+
+## Ruby setup
+
+<ParamField path="ruby-version" type="string" default="default">
+  The Ruby engine and version to install. Reads from `.ruby-version`, `.tool-versions`, or `mise.toml` if unset (i.e., when set to `default`).
+
+  See [Version syntax](/reference/version-syntax) for all supported formats.
+</ParamField>
+
+<ParamField path="rubygems" type="string" default="default">
+  The version of RubyGems to use. Accepted values:
+
+  - `default` — no action is taken; the RubyGems version that ships with Ruby is used.
+  - `latest` — runs `gem update --system` to update to the latest compatible RubyGems version. Ruby `head`/`master` builds are not updated.
+  - A version number (e.g., `3.3.5`) — runs `gem update --system <version>` to update to that specific version, as long as it is newer than the version provided by default.
+</ParamField>
+
+<ParamField path="self-hosted" type="string">
+  Whether to treat the runner as a self-hosted runner. When set to `true`, prebuilt Ruby binaries are not used; instead, the action looks for Ruby in the runner's tool cache.
+
+  The default is to detect this automatically based on the OS, OS version, and architecture. Set explicitly to `true` if you want to use custom-built Rubies in a self-hosted tool cache.
+</ParamField>
+
+<ParamField path="windows-toolchain" type="string" default="default">
+  Controls the build toolchain setup on Windows. Accepted values:
+
+  - `default` — installs a toolchain appropriate for the selected Ruby. Installs MSYS2 if not already present, then installs the relevant mingw/ucrt/mswin build tools and packages, and sets environment variables via `ridk` or `vcvars64.bat`.
+  - `none` — only adds Ruby to `PATH`. No build tools or packages are installed and no environment variables are changed.
+
+  This input has no effect on non-Windows runners.
+</ParamField>
+
+<ParamField path="token" type="string" default="${{ github.server_url == 'https://github.com' && github.token || '' }}">
+  GitHub token used to authenticate when downloading Ruby release assets from GitHub, helping avoid rate limiting.
+
+  When running on github.com, the default value (`github.token`) is sufficient. When running on a GitHub Enterprise Server (GHES) instance, you can provide a personal access token for github.com if you encounter rate limiting.
+
+  ```yaml
+  - uses: ruby/setup-ruby@v1
+    with:
+      token: ${{ secrets.MY_GITHUB_TOKEN }}
+  ```
+</ParamField>
+
+## Bundler
+
+<ParamField path="bundler" type="string" default="Gemfile.lock">
+  The version of Bundler to install. Accepted values:
+
+  - `Gemfile.lock` — reads the version from the `BUNDLED WITH` section of `Gemfile.lock` (or `$BUNDLE_GEMFILE.lock` or `gems.locked`) if it exists. Falls back to `default` if the file or section is absent.
+  - `default` — uses the Bundler version that ships with Ruby if it is 2.2 or newer; otherwise falls back to `latest`.
+  - `latest` — installs the latest compatible Bundler version (Bundler 2 on Ruby >= 2.3, Bundler 1 on Ruby < 2.3).
+  - `none` — skips Bundler installation entirely.
+  - A version number (e.g., `1`, `2`, `2.1`, `2.1.4`) — installs that specific version.
+</ParamField>
+
+<ParamField path="bundler-cache" type="boolean" default="false">
+  When `true`, runs `bundle install` and caches the installed gems automatically. Any separate `bundle install` or `gem install bundler` steps can be removed when this is enabled.
+
+  Requires a `Gemfile` (or `$BUNDLE_GEMFILE` or `gems.rb`) under the [`working-directory`](#working-directory). Uses `bundle config --local deployment true` when a lockfile is present.
+
+  ```yaml
+  - uses: ruby/setup-ruby@v1
+    with:
+      bundler-cache: true
+  ```
+</ParamField>
+
+<ParamField path="cache-version" type="string" default="0">
+  Arbitrary string added to the cache key for the bundler cache. Change this value to invalidate the existing cache — for example, when gems with C extensions depend on system libraries that have changed.
+
+  ```yaml
+  - uses: ruby/setup-ruby@v1
+    with:
+      bundler-cache: true
+      cache-version: 1
+  ```
+</ParamField>
+
+## Advanced
+
+<ParamField path="working-directory" type="string">
+  The working directory used to resolve `.ruby-version`, `.tool-versions`, `mise.toml`, and `Gemfile.lock`. Useful when these files are not at the root of the repository.
+
+  ```yaml
+  - uses: ruby/setup-ruby@v1
+    with:
+      working-directory: ./my-app
+  ```
+</ParamField>

@@ -1,0 +1,86 @@
+---
+title: "Supported versions"
+description: "All Ruby versions and platforms supported by setup-ruby"
+---
+
+## Ruby implementations
+
+| Implementation | Version range | Notes |
+| --- | --- | --- |
+| `ruby` (MRI) | 1.9.3, 2.0.0, 2.1.9, 2.2, 2.3.0–4.0.2, head, debug, mingw, mswin, ucrt | Special builds for head, debug, asan, and Windows toolchains |
+| `jruby` | 9.1.17.0–10.0.4.0, head | |
+| `truffleruby` | 19.3.0–33.0.1, head | |
+| `truffleruby+graalvm` | 21.2.0–33.0.1, head | |
+
+<Note>
+  For all available patch-level versions, see [`ruby-builder-versions.json`](https://github.com/ruby/setup-ruby/blob/master/ruby-builder-versions.json) (Ubuntu and macOS) and [`windows-versions.json`](https://github.com/ruby/setup-ruby/blob/master/windows-versions.json) (Windows).
+</Note>
+
+## Special MRI versions
+
+| Version | Description | Platform |
+| --- | --- | --- |
+| `head` | Latest commit on Ruby master | All (UCRT64 on Windows) |
+| `debug` | Same as `head` with assertions enabled (`-DRUBY_DEBUG=1`) | All |
+| `asan` | Same as `head` with AddressSanitizer enabled; native extensions compiled with ASan automatically | `ubuntu-24.04` only |
+| `asan-release` | Like `asan` but built from the latest stable release tag | `ubuntu-24.04` only |
+| `mingw` | Windows head build using MSYS2/MinGW | Windows only |
+| `ucrt` | Windows head build using MSYS2/UCRT64 (same as `head` on Windows) | Windows only |
+| `mswin` | Windows head build using MSVC/VS 2022 | Windows only |
+
+## Supported platforms
+
+| Operating system | Runner images |
+| --- | --- |
+| Ubuntu | `ubuntu-22.04`, `ubuntu-24.04`, `ubuntu-22.04-arm`, `ubuntu-24.04-arm` |
+| macOS | `macos-14` and newer |
+| Windows | `windows-2022`, `windows-2025`, `windows-11-arm` |
+
+Not all combinations of runner image and Ruby version are supported. See the [full availability list](https://github.com/ruby/ruby-builder/releases/tag/toolcache) for Ubuntu and macOS.
+
+## Preview and RC versions
+
+Preview and RC versions of Ruby (e.g. `3.5.0-preview1`, `4.0.0-rc1`) may be available on Ubuntu and macOS, but are not available on Windows.
+
+<Tip>
+  Test against `ruby-head` rather than preview releases. It gives the Ruby core team earlier feedback and reflects upcoming changes more accurately than a preview snapshot.
+</Tip>
+
+## Windows-only notes
+
+<Warning>
+  On Windows, only release versions published by [RubyInstaller](https://rubyinstaller.org/downloads/archives/) are available. This means:
+
+  - Ruby 2.2 resolves to **2.2.6** on Windows but **2.2.10** on other platforms
+  - Ruby 2.3 on Windows only has builds for **2.3.0**, **2.3.1**, and **2.3.3**
+</Warning>
+
+The three Windows toolchain variants differ in their compiler and runtime:
+
+- **`mingw`** — MSYS2/MinGW build
+- **`ucrt`** / **`head`** — MSYS2/UCRT64 build
+- **`mswin`** — MSVC/VS 2022 build
+
+## End-of-life versions
+
+<Warning>
+  Ruby 2.4 and earlier, along with the OpenSSL 1.0.2 version they depend on, are both end-of-life. These versions are unmaintained and considered insecure. Avoid using them in new workflows.
+</Warning>
+
+Support for these versions remains in the action for compatibility with legacy projects, but no security fixes will be backported.
+
+## Version syntax reference
+
+The `ruby-version` input accepts several formats:
+
+| Format | Example | Behavior |
+| --- | --- | --- |
+| Engine + version | `ruby-2.6.5`, `truffleruby-19.3.0` | Exact version of the given engine |
+| Short version | `'2.6'` | Latest patch release matching that minor version (e.g. `2.6.10`) |
+| Version only | `'2.6.5'` | Assumes MRI |
+| Engine only | `ruby`, `truffleruby` | Latest stable release of that implementation |
+| File-based | _(no input set)_ | Reads `.ruby-version`, then `.tool-versions`, then `mise.toml` |
+
+<Note>
+  Quote version strings like `'3.0'` in YAML to prevent the parser from interpreting them as numbers. `3.0` unquoted becomes `3` in YAML, which resolves to the latest `3.x` release rather than the latest `3.0.x` patch.
+</Note>

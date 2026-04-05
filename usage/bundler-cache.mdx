@@ -1,0 +1,99 @@
+---
+title: "Bundler cache"
+description: "Automatically install gems and cache them with bundler-cache"
+---
+
+Setting `bundler-cache: true` tells the action to run `bundle install` and cache the result automatically. Subsequent workflow runs restore from cache, making gem installation significantly faster and reducing requests to RubyGems.org.
+
+## Basic usage
+
+```yaml
+- uses: ruby/setup-ruby@v1
+  with:
+    ruby-version: '3.4'
+    bundler-cache: true
+```
+
+With `bundler-cache: true` you can remove any explicit `bundle install` or `gem install bundler` steps from your workflow — the action handles both.
+
+<Note>
+  The action requires a `Gemfile` (or `$BUNDLE_GEMFILE` or `gems.rb`) to be present under the working directory. If no Gemfile is found, the action skips `bundle install` and caching.
+</Note>
+
+## How caching works
+
+<Steps>
+  <Step title="Resolve the lockfile">
+    The action looks for `Gemfile.lock` (or `$BUNDLE_GEMFILE.lock` or `gems.locked`). If no lockfile exists, it runs `bundle lock` to generate one. This is the same step `bundle install` would perform internally, so no gems are installed yet at this point.
+  </Step>
+  <Step title="Compute the cache key">
+    The cache key is built from: OS name, OS version, CPU architecture, Ruby engine, Ruby version, working directory, `BUNDLE_WITH`, `BUNDLE_WITHOUT`, `BUNDLE_ONLY` environment variables, an optional `cache-version` suffix, and the SHA-256 hash of the lockfile. For head Ruby versions, the Ruby ABI version is also included.
+  </Step>
+  <Step title="Restore from cache">
+    The action attempts to restore `vendor/bundle` using the exact cache key. If there is no exact match, it falls back to the partial restore key (everything except the lockfile hash) to reuse gems from a previous run.
+  </Step>
+  <Step title="Run bundle install">
+    `bundle install` always runs to verify the installation is complete. When restoring from a partial key (Gemfile.lock changed), the action also runs `bundle clean` to remove gems that are no longer needed before saving the new cache.
+  </Step>
+  <Step title="Save the cache">
+    If the exact key was not already cached, the action saves `vendor/bundle` under the new key. Cache saving is skipped for the `merge_group` event.
+  </Step>
+</Steps>
+
+The action sets `bundle config set --local path vendor/bundle` internally. Do not change the Bundler `path` configuration in your workflow, as this will break the cache.
+
+When a lockfile exists, the action also sets `bundle config set --local deployment true`, which prevents the Gemfile from being modified during `bundle install`.
+
+## Cache key strategy
+
+The cache key includes a hash of the lockfile, so the cache is automatically invalidated whenever `Gemfile.lock` changes. The partial restore key (without the hash) allows the action to restore a close-but-not-exact cache and then layer the new gems on top.
+
+For example:
+
+- **Exact hit**: `Gemfile.lock` unchanged — restores and skips saving.
+- **Partial hit**: `Gemfile.lock` changed — restores old gems, runs `bundle clean`, runs `bundle install`, saves new cache.
+- **Miss**: No prior cache — runs `bundle install` from scratch, saves cache.
+
+## Invalidating the cache manually
+
+Use `cache-version` to force a full cache bust. Set it to any non-default string when you need to start fresh — for example, when a gem with native extensions depends on system libraries that changed on the runner:
+
+```yaml
+- uses: ruby/setup-ruby@v1
+  with:
+    ruby-version: '3.4'
+    bundler-cache: true
+    cache-version: 1
+```
+
+Change the value again any time you need to invalidate the cache again. The default value is `0` and is omitted from the key; any other value is appended as `-v-<cache-version>`.
+
+<Warning>
+  Do not use `actions/cache` manually to cache gems. Getting the cache key correct is complex: it must account for the OS version, Ruby version and ABI, the lockfile hash, group filtering variables, and more. Use `bundler-cache: true` instead.
+</Warning>
+
+## Configuring Bundler with environment variables
+
+When using `bundler-cache: true`, there is no step before the action where you can run `bundle config`. Use `BUNDLE_*` environment variables instead. Set them at the **job level** so they are available to all steps, including the action itself:
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      BUNDLE_WITHOUT: "development:test"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.4'
+          bundler-cache: true
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.4'
+          bundler-cache: true
+```
+
+The action reads `$BUNDLE_GEMFILE` and uses `$BUNDLE_GEMFILE.lock` as the lockfile. See [Matrix testing](/usage/matrix-testing) for a full gemfile matrix example.

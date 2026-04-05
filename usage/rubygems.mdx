@@ -1,0 +1,74 @@
+---
+title: "RubyGems version"
+description: "Customize the RubyGems version used in your workflow"
+---
+
+By default, the action uses whichever version of RubyGems ships with the selected Ruby. The `rubygems` input lets you override this when needed.
+
+## Default behavior
+
+When `rubygems` is not set (or is set to `default`), the action takes no action and the version of RubyGems bundled with Ruby is used as-is.
+
+## Updating to the latest compatible version
+
+Set `rubygems: latest` to run `gem update --system` and upgrade to the most recent RubyGems version compatible with the selected Ruby:
+
+```yaml
+- uses: ruby/setup-ruby@v1
+  with:
+    ruby-version: '3.4'
+    rubygems: latest
+```
+
+Because older RubyGems versions do not always respect `required_ruby_version` when running `gem update --system`, the action selects a known-compatible target version based on the Ruby version:
+
+| Ruby version | Latest RubyGems target |
+| --- | --- |
+| 3.2 and newer | Latest (no version pinned) |
+| 3.1.x | 3.6.9 |
+| 3.0.x | 3.5.23 |
+| 2.6.x – 2.7.x | 3.4.22 |
+| 2.3.x – 2.5.x | 3.3.27 |
+| 1.9.x – 2.2.x | 2.7.11 (via `rubygems-update` gem) |
+
+<Note>
+  Ruby `head` and `master` builds are not updated even when `rubygems: latest` is set. They use whichever RubyGems version is included in the build.
+</Note>
+
+For non-MRI engines (JRuby and TruffleRuby), `gem update --system` is run without a pinned version.
+
+## Pinning to a specific version
+
+Pass a version number to install that exact version of RubyGems:
+
+```yaml
+- uses: ruby/setup-ruby@v1
+  with:
+    ruby-version: '3.4'
+    rubygems: '3.5.23'
+```
+
+<Warning>
+  The action only upgrades RubyGems, never downgrades. If the specified version is not newer than the default version bundled with Ruby, the update is skipped and a log message is printed.
+</Warning>
+
+## When to use the `rubygems` input
+
+The most common reason to set `rubygems` is to fix a Psych/RubyGems incompatibility that surfaces as:
+
+```
+ArgumentError: wrong number of arguments (given 4, expected 1)
+```
+
+If you see a stacktrace that includes both Psych and RubyGems entries, updating RubyGems typically resolves it:
+
+```yaml
+- uses: ruby/setup-ruby@v1
+  with:
+    ruby-version: '3.0'
+    rubygems: '3.5.23'
+```
+
+## Effect on Bundler installation
+
+When `rubygems` is set to any value other than `default`, the action uses the Bundler that is installed alongside the updated RubyGems instead of separately installing Bundler. This applies when `bundler` is set to `default` or `Gemfile.lock` (the default). If you set `bundler` to a specific version or `latest`, that version is installed regardless.

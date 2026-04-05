@@ -1,0 +1,117 @@
+---
+title: "Basic setup"
+description: "Configure setup-ruby for a single Ruby version"
+---
+
+Add `ruby/setup-ruby` to your workflow to download a prebuilt Ruby and add it to `PATH`. The action takes about 5 seconds and requires no extra packages.
+
+## Minimal usage
+
+```yaml
+name: CI
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.4'
+      - run: ruby --version
+```
+
+<Tip>
+  Always use `ruby/setup-ruby@v1` rather than pinning to a specific commit or release tag. The `v1` branch receives automatic bug fixes and new Ruby version support.
+</Tip>
+
+## Reading the version from a file
+
+When `ruby-version` is not specified, the action looks for a version file in this order:
+
+1. `.ruby-version`
+2. `.tool-versions` (asdf format)
+3. `mise.toml`
+
+If none of these files exist and `ruby-version` is not set, the action raises an error.
+
+### `.ruby-version`
+
+If your repository contains a `.ruby-version` file, you can omit the `ruby-version` input entirely:
+
+```yaml
+- uses: ruby/setup-ruby@v1
+```
+
+The file should contain a bare version string, for example:
+
+```text
+3.4.2
+```
+
+### `.tool-versions` (asdf)
+
+The action reads the `ruby` line from `.tool-versions`:
+
+```text
+ruby 3.4.2
+```
+
+No additional input is needed:
+
+```yaml
+- uses: ruby/setup-ruby@v1
+```
+
+### `mise.toml`
+
+The action reads the `ruby` key from `mise.toml`:
+
+```toml
+ruby = "3.4.2"
+```
+
+No additional input is needed:
+
+```yaml
+- uses: ruby/setup-ruby@v1
+```
+
+## Setting a specific version explicitly
+
+Pass a version string to `ruby-version`. The action supports several formats:
+
+| Format | Example | Description |
+| --- | --- | --- |
+| Full version | `'3.4.2'` | Exact MRI version |
+| Short version | `'3.4'` | Latest patch release matching `3.4.x` |
+| Engine + version | `'truffleruby-24.0.0'` | Specific engine and version |
+| Engine only | `'truffleruby'` | Latest stable release of that engine |
+| Head | `'head'` | Latest MRI development build |
+| JRuby head | `'jruby-head'` | Latest JRuby development build |
+
+```yaml
+- uses: ruby/setup-ruby@v1
+  with:
+    ruby-version: '3.4'
+```
+
+<Note>
+  Short version strings like `'3.0'` must be quoted in YAML. Without quotes, GitHub Actions may interpret them as floats, which loses the trailing zero. See [actions/runner#849](https://github.com/actions/runner/issues/849).
+</Note>
+
+## Using `working-directory`
+
+The `working-directory` input tells the action where to look for `.ruby-version`, `.tool-versions`, `mise.toml`, and `Gemfile.lock`. Use this when those files are not at the repository root.
+
+```yaml
+- uses: ruby/setup-ruby@v1
+  with:
+    working-directory: ./my-ruby-app
+```
+
+<Note>
+  `working-directory` only affects how the action resolves version files and the Gemfile. It does not change the working directory for subsequent `run` steps. Those steps still use the runner's default working directory unless you set `working-directory` on each step individually.
+</Note>
+
+See [Working directory](/usage/working-directory) for a full example.

@@ -1,97 +1,77 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "setup-ruby"
+description: "Download a prebuilt Ruby and add it to the PATH in 5 seconds. Supports MRI, JRuby, and TruffleRuby on Ubuntu, macOS, and Windows."
 ---
 
-## Setting up
+Set up Ruby for your GitHub Actions workflows in seconds. `setup-ruby` downloads a prebuilt Ruby binary — MRI, JRuby, or TruffleRuby — and adds it to the `PATH` with no extra packages required.
 
-Get your documentation site up and running in minutes.
+```yaml
+- uses: ruby/setup-ruby@v1
+  with:
+    ruby-version: '3.4'
+    bundler-cache: true
+```
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get Ruby running in your workflow in under a minute
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Supported versions" icon="list-check" href="/supported-versions">
+    Browse all supported MRI, JRuby, and TruffleRuby versions
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Matrix testing" icon="grid-2" href="/usage/matrix-testing">
+    Test across multiple Ruby versions and operating systems
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="Bundler & caching" icon="box-archive" href="/usage/bundler-cache">
+    Automatically run bundle install and cache gems
   </Card>
-</Columns>
+  <Card title="Action inputs" icon="sliders" href="/reference/inputs">
+    Full reference for all action inputs and their defaults
+  </Card>
+  <Card title="Platform support" icon="desktop" href="/platforms/supported-platforms">
+    Ubuntu, macOS, and Windows runner compatibility
+  </Card>
+</CardGroup>
 
-## Create beautiful pages
+## Why setup-ruby?
 
-Everything you need to create world-class documentation.
+- **Fast** — prebuilt binaries are downloaded and extracted in ~5 seconds, no compilation required
+- **Broad version support** — MRI from 1.9.3 through head, JRuby 9.1+, and TruffleRuby 19.3+
+- **Automatic Bundler management** — installs the right Bundler version and caches gems automatically
+- **Version file support** — reads `.ruby-version`, `.tool-versions`, or `mise.toml` automatically
+- **Cross-platform** — works on all GitHub-hosted Ubuntu, macOS, and Windows runners
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+## Getting started
 
-## Need inspiration?
+<Steps>
+  <Step title="Add the action to your workflow">
+    Use `ruby/setup-ruby@v1` in your workflow file. Always use the `v1` branch to get automatic updates.
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+    ```yaml .github/workflows/test.yml
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.4'
+    ```
+  </Step>
+  <Step title="Enable Bundler caching (recommended)">
+    Add `bundler-cache: true` to automatically run `bundle install` and cache the result.
+
+    ```yaml .github/workflows/test.yml
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.4'
+        bundler-cache: true
+    ```
+  </Step>
+  <Step title="Run your tests">
+    Execute your test suite using `bundle exec`.
+
+    ```yaml .github/workflows/test.yml
+    - run: bundle exec rake
+    ```
+  </Step>
+</Steps>
+
+<Tip>
+  Prefer `ruby/setup-ruby@v1` over pinning to a specific version or commit. The `v1` branch automatically receives bug fixes, new Ruby versions, and new features.
+</Tip>
